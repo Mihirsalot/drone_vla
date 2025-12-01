@@ -74,16 +74,15 @@ def process_episode_with_video(trial_dir, ep_idx, df_csv, video_path, rec_path, 
         
         episode_rows.append({
             'episode_index': ep_idx,
-            'trial_name': trial_dir.name,  # Store folder name for reference
-            'frame_index': len(episode_rows),
             'timestamp': np.float32(frame_time_in_video),
+            'index': global_index + len(episode_rows),
+            'frame_index': len(episode_rows),
             'observation.state': [np.float32(row[f]) for f in OBSERVATION_FEATURES],
             'action': action_values,
             'instruction': TASK_NAME,
             'task_index': TASK_INDEX,
             'next.done': False,
-            'index': global_index + len(episode_rows),
-            'observation.images.cam_high': video_frame
+            'observation.images.cam_high': video_frame,
         })
     
     cap.release()
@@ -111,6 +110,5 @@ def process_episode_with_video(trial_dir, ep_idx, df_csv, video_path, rec_path, 
         'videos/observation.images.cam_high/from_timestamp': 0.0
     }
     
-    print(f"  [{trial_dir.name}] Saved {len(episode_rows)}/{frame_count} synchronized frames")
     return episode_rows, episode_metadata
 

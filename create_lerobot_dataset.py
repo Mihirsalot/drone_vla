@@ -6,12 +6,28 @@ Organized into modular functions and separate files.
 
 from pathlib import Path
 from tqdm import tqdm
+import cv2
 
 from dataset_config import DATA_DIR, OUTPUT_DIR
 from episode_processor import process_episode_with_video
 from data_writer import save_episode_to_parquet, calculate_average_fps, IncrementalStats
 from metadata_writer import create_info_json, save_metadata
 from video_sync_utils import create_verification_video_from_parquet
+
+
+def get_video_resolution(video_path: Path) -> tuple[int, int] | None:
+    """
+    Return (height, width) for a single mp4 file, or None if it can't be read.
+    """
+    if not video_path.exists():
+        return None
+    cap = cv2.VideoCapture(str(video_path))
+    ret, frame = cap.read()
+    cap.release()
+    if not ret or frame is None:
+        return None
+    h, w = frame.shape[:2]
+    return h, w
 
 
 def main():
@@ -82,9 +98,23 @@ def main():
     print("\nCalculating FPS from videos...")
     avg_fps = calculate_average_fps(trials)
     print(f"Average FPS: {avg_fps}")
-    
-    # Create and save metadata
-    info = create_info_json(avg_fps, len(episodes_data), global_index)
+
+    # Infer raw image shape (height, width) from the first available video
+    image_shape = None
+    for trial_dir in trials:
+        video_path = trial_dir / "recording.mp4"
+        res = get_video_resolution(video_path)
+        if res is not None:
+            h, w = res
+            image_shape = (h, w)
+            print(f"\nDetected raw video resolution from {video_path.name}: {h}x{w}")
+            break
+
+    if image_shape is None:
+        print("\n⚠ Could not detect video resolution, falling back to default 224x224 in info.json")
+
+    # Create and save metadata (features schema now uses detected image_shape if available)
+    info = create_info_json(avg_fps, len(episodes_data), global_index, image_shape=image_shape)
     saved_files = save_metadata(meta_dir, info, stats, episodes_data)
     
     # Print summary

@@ -141,7 +141,7 @@ def save_episode_to_parquet(episode_rows, ep_idx, chunk_dir):
     
     # IMPORTANT: Replace global indices with local indices (0-based per file)
     # LeRobot uses dataset_from_index from episode metadata to map global->local
-    df_data['index'] = np.arange(len(df_data), dtype=np.int64)
+    # df_data['index'] = np.arange(len(df_data), dtype=np.int64)
     
     # Convert lists to numpy arrays
     observation_arrays = [np.array(x, dtype=np.float32) for x in df_data['observation.state']]

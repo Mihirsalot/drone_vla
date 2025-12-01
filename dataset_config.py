@@ -3,7 +3,7 @@
 from pathlib import Path
 
 # Directory paths
-DATA_DIR = Path("../AirSim 5M Hover Data")
+DATA_DIR = Path("AirSim 5M Hover Data")
 OUTPUT_DIR = Path("lerobot_dataset")
 SYNC_THRESHOLD = 0.1  # seconds
 

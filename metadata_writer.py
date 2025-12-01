@@ -6,8 +6,20 @@ from pathlib import Path
 from dataset_config import OBSERVATION_FEATURES, ACTION_FEATURES
 
 
-def create_features_schema():
-    """Create the features schema for info.json."""
+def create_features_schema(image_shape: tuple[int, int] | None = None):
+    """
+    Create the features schema for info.json.
+
+    Args:
+        image_shape: Optional (height, width) of the raw video frame.
+            If None, defaults to (224, 224).
+    """
+    # Default to 224x224 if no shape was provided
+    if image_shape is None:
+        height, width = 224, 224
+    else:
+        height, width = image_shape
+
     return {
         'episode_index': {'dtype': 'int64', 'shape': [1]},
         'timestamp': {'dtype': 'float32', 'shape': [1]},
@@ -26,19 +38,28 @@ def create_features_schema():
         },
         'observation.images.cam_high': {
             'dtype': 'video',
-            'shape': [3, 224, 224],
+            # LeRobot convention: [channels, height, width]
+            'shape': [3, height, width],
             'names': ['channels', 'height', 'width']
         },
         'next.done': {'dtype': 'bool', 'shape': [1]}
     }
 
 
-def create_info_json(avg_fps, total_episodes, total_frames):
-    """Create info.json content."""
+def create_info_json(avg_fps, total_episodes, total_frames, image_shape: tuple[int, int] | None = None):
+    """
+    Create info.json content.
+
+    Args:
+        avg_fps: Average FPS across all videos.
+        total_episodes: Number of episodes.
+        total_frames: Total number of frames.
+        image_shape: Optional (height, width) of raw video frames.
+    """
     return {
         'codebase_version': '3.0',
         'fps': avg_fps,
-        'features': create_features_schema(),
+        'features': create_features_schema(image_shape=image_shape),
         'total_episodes': total_episodes,
         'total_frames': total_frames,
         'robot_type': 'airsim_drone',
